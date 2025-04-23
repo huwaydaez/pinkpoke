@@ -12,4 +12,4 @@ technologies used:
 - html
 - css w/ tailwind css framework
 - js
-- pokeapi javascript wrapper (https://unpkg.com/pokeapi-js-wrapper/dist/index.js)
+- pokeapi javascript wrapper (https://github.com/PokeAPI/pokeapi-js-wrapper)
