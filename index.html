@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wayda's poke collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
+    <script src="https://unpkg.com/pokeapi-js-wrapper/dist/index.js"></script>
+    <style>
+
+        h1 {
+            margin-top: 5%;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .pokemon-card {
+            background-color: #fce4ec;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #fb8c00;
+        }
+
+        .pokemon-card:hover {
+            transform: translateY(-0.25rem);
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.15), 0 6px 8px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .pokemon-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #e91e63;
+        }
+
+        .pokemon-image {
+            height: 150px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pokemon-image img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .pokemon-info {
+            font-size: 1rem;
+            color: #9c27b0;
+            margin-bottom: 0.25rem;
+        }
+
+        .pokemon-types {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pokemon-type {
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            color: white;
+        }
+
+        .type-normal { background-color: #a8a77a; }
+        .type-fire { background-color: #ee7f30; }
+        .type-water { background-color: #6390f0; }
+        .type-grass { background-color: #7ac74c; }
+        .type-electric { background-color: #f7d02c; }
+        .type-ice { background-color: #96d9d6; }
+        .type-fighting { background-color: #c22e28; }
+        .type-poison { background-color: #a33ea1; }
+        .type-ground { background-color: #e2bf65; }
+        .type-flying { background-color: #a98ff3; }
+        .type-psychic { background-color: #f95587; }
+        .type-bug { background-color: #a6b91a; }
+        .type-rock { background-color: #b6a136; }
+        .type-ghost { background-color: #735797; }
+        .type-dragon { background-color: #6934ff; }
+        .type-dark { background-color: #705746; }
+        .type-steel { background-color: #b7b7ce; }
+        .type-fairy { background-color: #d685ad; }
+
+        #pokedex-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+       
+
+    </style>
+</head>
+<body class="bg-pink-100 font-sans">
+    <h1 class="text-3xl font-bold text-center mb-4 text-pink-700"> wayda's pink pokes ♡ </h1>
+    <div id="pokedex-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    </div>
+
+    <script>
+        const pokedexContainer = document.getElementById('pokedex-container');
+        const P = new Pokedex.Pokedex();
+
+        // pokemon names array
+        const pokemonNames = ['mew', 'skitty', 'corsola', 'jigglypuff', 'slowbro', 'exeggcute', 'cleffa', 'lickitung'];
+
+        // function to fetch pokemon data from api
+        //idk how to do this so i asked my brother n ai hahaha
+        async function fetchPokemonData(pokemonName) {
+            try {
+                const pokemon = await P.getPokemonByName(pokemonName);
+                return pokemon;
+            } catch (error) {
+                console.error('Error fetching pokemon data:', error);
+                return null;
+            }
+        }
+
+        // function to create a pokemon card element
+        function createPokemonCard(pokemonData) {
+            if (!pokemonData) {
+                return `
+                    <div class="pokemon-card bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+                        <p class="font-bold">Error</p>
+                        <p class="text-sm">Failed to load Pokemon data.</p>
+                    </div>
+                `;
+            }
+
+            const { name, sprites, types, id, height, weight } = pokemonData;
+            const imageUrl = sprites.other['official-artwork'].front_default;
+
+            const typeNames = types.map(typeInfo => typeInfo.type.name);
+
+            function getPrimaryType(types) {
+                if (types && types.length > 0) {
+                    return types[0].type.name;
+                }
+                return 'normal';
+            }
+
+            const primaryType = getPrimaryType(types);
+
+            const card = document.createElement('div');
+            card.className = `pokemon-card bg-${primaryType === 'normal' ? 'gray' : primaryType}-100`;
+            card.innerHTML = `
+                <h2 class="pokemon-name">${name.charAt(0).toLowerCase() + name.slice(1)+ ' !! ♡'}</h2>
+                <div class="pokemon-image">
+                    <img src="${imageUrl}" alt="${name}" onerror="this.src='https://via.placeholder.com/150?text=No+Image';" loading="lazy">
+                </div>
+                <div class="pokemon-types">
+                    ${typeNames.map(typeName => `<span class="pokemon-type type-${typeName}">${typeName}</span>`).join('')}
+                </div>
+                <p class="pokemon-info">id: ${id}</p>
+                <p class="pokemon-info">height: ${height / 10} m</p>
+                <p class="pokemon-info">weight: ${weight / 10} kg</p>
+            `;
+
+            return card;
+        }
+
+        // main function to fetch data and render cards
+        async function initializePokedex() {
+            pokedexContainer.innerHTML = '<p class="text-gray-500 text-center">loading pink pokedex...</p>';
+
+            const pokemonDataArray = await Promise.all(
+                pokemonNames.map(pokemonName => fetchPokemonData(pokemonName))
+            );
+
+            pokedexContainer.innerHTML = ''; 
+            pokemonDataArray.forEach(pokemonData => {
+                const card = createPokemonCard(pokemonData);
+                pokedexContainer.appendChild(card);
+            });
+        }
+
+        // call the main function
+        initializePokedex();
+    </script>
+</body>
+</html>
