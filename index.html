@@ -8,7 +8,6 @@
     <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
     <script src="https://unpkg.com/pokeapi-js-wrapper/dist/index.js"></script>
     <style>
-
         h1 {
             margin-top: 5%;
             font-family: 'Courier New', Courier, monospace;
@@ -23,6 +22,7 @@
             margin-bottom: 1rem;
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
             border: 1px solid #fb8c00;
+            cursor: pointer; 
         }
 
         .pokemon-card:hover {
@@ -35,6 +35,7 @@
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: #e91e63;
+            text-transform: capitalize;
         }
 
         .pokemon-image {
@@ -55,6 +56,7 @@
             font-size: 1rem;
             color: #9c27b0;
             margin-bottom: 0.25rem;
+            text-transform: capitalize;
         }
 
         .pokemon-types {
@@ -70,8 +72,10 @@
             border-radius: 1rem;
             font-size: 0.75rem;
             color: white;
+            text-transform: capitalize;
         }
 
+        /* Type colors */
         .type-normal { background-color: #a8a77a; }
         .type-fire { background-color: #ee7f30; }
         .type-water { background-color: #6390f0; }
@@ -97,36 +101,150 @@
             padding: 1rem;
         }
 
-       
+        /* --- Modal Styles --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fff0f6;
+            margin: 5% auto;
+            padding: 25px;
+            border: 2px solid #e91e63;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .close-button {
+            color: #e91e63;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 35px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #ad1457;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Styles for modal details */
+        #modalPokemonImage img {
+             display: block;
+             margin: 0 auto 1rem auto;
+             max-height: 200px;
+        }
+
+        #modalPokemonName {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e91e63;
+            margin-bottom: 1rem;
+            text-transform: capitalize;
+        }
+
+        .modal-details {
+             color: #9c27b0;
+             line-height: 1.6;
+        }
+        .modal-details strong {
+            color: #5e35b1;
+        }
+        .modal-abilities li, .modal-stats li {
+            margin-left: 20px;
+            list-style: disc;
+            text-transform: capitalize;
+        }
+         /* Reuse card type styles */
+        .modal-types {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            margin-top: 0.5rem;
+        }
 
     </style>
 </head>
 <body class="bg-pink-100 font-sans">
     <h1 class="text-3xl font-bold text-center mb-4 text-pink-700"> wayda's pink pokes ♡ </h1>
     <div id="pokedex-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        </div>
+
+    <div id="pokemonModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="modalPokemonName"></div>
+            <div id="modalPokemonImage"></div>
+            <div class="modal-types" id="modalPokemonTypes"></div>
+            <div class="modal-details">
+                 <p><strong class="capitalize">ID:</strong> <span id="modalPokemonId"></span></p>
+                 <p><strong class="capitalize">Height:</strong> <span id="modalPokemonHeight"></span> m</p>
+                 <p><strong class="capitalize">Weight:</strong> <span id="modalPokemonWeight"></span> kg</p>
+                 <div class="mt-2">
+                     <strong class="capitalize">Abilities:</strong>
+                     <ul id="modalPokemonAbilities" class="list-none p-0 ml-4"></ul>
+                 </div>
+                 <div class="mt-2">
+                     <strong class="capitalize">Base Stats:</strong>
+                     <ul id="modalPokemonStats" class="list-none p-0 ml-4"></ul>
+                 </div>
+            </div>
+        </div>
     </div>
+
 
     <script>
         const pokedexContainer = document.getElementById('pokedex-container');
         const P = new Pokedex.Pokedex();
 
-        // pokemon names array
+        // Modal elements
+        const modal = document.getElementById('pokemonModal');
+        const modalCloseButton = modal.querySelector('.close-button');
+        const modalPokemonName = document.getElementById('modalPokemonName');
+        const modalPokemonImage = document.getElementById('modalPokemonImage');
+        const modalPokemonTypes = document.getElementById('modalPokemonTypes');
+        const modalPokemonId = document.getElementById('modalPokemonId');
+        const modalPokemonHeight = document.getElementById('modalPokemonHeight');
+        const modalPokemonWeight = document.getElementById('modalPokemonWeight');
+        const modalPokemonAbilities = document.getElementById('modalPokemonAbilities');
+        const modalPokemonStats = document.getElementById('modalPokemonStats');
+
+
         const pokemonNames = ['mew', 'skitty', 'corsola', 'jigglypuff', 'slowbro', 'exeggcute', 'cleffa', 'lickitung'];
 
-        // function to fetch pokemon data from api
-        //idk how to do this so i asked my brother n ai hahaha
         async function fetchPokemonData(pokemonName) {
             try {
+                // Fetching the main data
                 const pokemon = await P.getPokemonByName(pokemonName);
+
                 return pokemon;
             } catch (error) {
-                console.error('Error fetching pokemon data:', error);
+                console.error(`Error fetching pokemon data for ${pokemonName}:`, error);
                 return null;
             }
         }
 
-        // function to create a pokemon card element
-        function createPokemonCard(pokemonData) {
+        // Creates pokemon card HTML (no event listener added here)
+        function createPokemonCardHTML(pokemonData) {
             if (!pokemonData) {
                 return `
                     <div class="pokemon-card bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
@@ -136,54 +254,133 @@
                 `;
             }
 
-            const { name, sprites, types, id, height, weight } = pokemonData;
-            const imageUrl = sprites.other['official-artwork'].front_default;
-
+            const { name, sprites, types, id } = pokemonData;
+            const imageUrl = sprites.other?.['official-artwork']?.front_default || sprites.front_default;
             const typeNames = types.map(typeInfo => typeInfo.type.name);
 
             function getPrimaryType(types) {
                 if (types && types.length > 0) {
-                    return types[0].type.name;
+                    const priorityTypes = ['fairy', 'psychic'];
+                    for (const pType of priorityTypes) {
+                        if (types.some(t => t.type.name === pType)) return pType;
+                    }
+                    return types[0].type.name; 
                 }
                 return 'normal';
             }
 
             const primaryType = getPrimaryType(types);
 
-            const card = document.createElement('div');
-            card.className = `pokemon-card bg-${primaryType === 'normal' ? 'gray' : primaryType}-100`;
-            card.innerHTML = `
-                <h2 class="pokemon-name">${name.charAt(0).toLowerCase() + name.slice(1)+ ' !! ♡'}</h2>
-                <div class="pokemon-image">
-                    <img src="${imageUrl}" alt="${name}" onerror="this.src='https://via.placeholder.com/150?text=No+Image';" loading="lazy">
-                </div>
-                <div class="pokemon-types">
-                    ${typeNames.map(typeName => `<span class="pokemon-type type-${typeName}">${typeName}</span>`).join('')}
-                </div>
-                <p class="pokemon-info">id: ${id}</p>
-                <p class="pokemon-info">height: ${height / 10} m</p>
-                <p class="pokemon-info">weight: ${weight / 10} kg</p>
-            `;
 
-            return card;
+            const cardHTML = `
+                <div class="pokemon-card" data-pokemon-name="${name}"> <h2 class="pokemon-name">${name + ' !! ♡'}</h2>
+                    <div class="pokemon-image">
+                        <img src="${imageUrl}" alt="${name}" onerror="this.style.display='none';" loading="lazy">
+                    </div>
+                    <div class="pokemon-types">
+                        ${typeNames.map(typeName => `<span class="pokemon-type type-${typeName}">${typeName}</span>`).join('')}
+                    </div>
+                    <p class="pokemon-info">id: ${id}</p>
+                    </div>
+            `;
+            return cardHTML;
         }
 
-        // main function to fetch data and render cards
-        async function initializePokedex() {
-            pokedexContainer.innerHTML = '<p class="text-gray-500 text-center">loading pink pokedex...</p>';
+         // Opens and populates the modal
+         function openModal(pokemonData) {
+             if (!pokemonData) return; // Don't open if data is missing
 
+             const { name, sprites, types, id, height, weight, abilities, stats } = pokemonData;
+             const imageUrl = sprites.other?.['official-artwork']?.front_default || sprites.front_default;
+
+             // Populate basic info
+             modalPokemonName.textContent = name + ' ♡ Details';
+             modalPokemonImage.innerHTML = `<img src="${imageUrl}" alt="${name}" onerror="this.style.display='none';">`;
+             modalPokemonId.textContent = id;
+             modalPokemonHeight.textContent = height / 10;
+             modalPokemonWeight.textContent = weight / 10;
+
+             // Populate types
+             modalPokemonTypes.innerHTML = types.map(typeInfo =>
+                 `<span class="pokemon-type type-${typeInfo.type.name}">${typeInfo.type.name}</span>`
+             ).join('');
+
+             // Populate abilities
+             modalPokemonAbilities.innerHTML = abilities.map(abilityInfo =>
+                 `<li>${abilityInfo.ability.name.replace('-', ' ')}${abilityInfo.is_hidden ? ' (Hidden)' : ''}</li>`
+             ).join('');
+
+             // Populate stats
+             modalPokemonStats.innerHTML = stats.map(statInfo =>
+                 `<li>${statInfo.stat.name.replace('-', ' ')}: ${statInfo.base_stat}</li>`
+             ).join('');
+
+             modal.style.display = 'block';
+         }
+
+         // Closes the modal
+         function closeModal() {
+             modal.style.display = 'none';
+             modalPokemonName.textContent = '';
+             modalPokemonImage.innerHTML = '';
+             modalPokemonTypes.innerHTML = '';
+             modalPokemonAbilities.innerHTML = '';
+             modalPokemonStats.innerHTML = '';
+         }
+
+         // Add event listeners for closing the modal
+         modalCloseButton.addEventListener('click', closeModal);
+         // Close modal if clicked outside the content area
+         window.addEventListener('click', (event) => {
+             if (event.target == modal) {
+                 closeModal();
+             }
+         });
+
+        // Main function to fetch data and render cards
+        async function initializePokedex() {
+            pokedexContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">loading pink pokedex...</p>'; // Use col-span-full for grid styling
+
+            // Fetch all data concurrently
             const pokemonDataArray = await Promise.all(
                 pokemonNames.map(pokemonName => fetchPokemonData(pokemonName))
             );
 
-            pokedexContainer.innerHTML = ''; 
+            pokedexContainer.innerHTML = '';
+
+            const pokemonDataMap = new Map();
+            pokemonDataArray.forEach(data => {
+                if (data) {
+                    pokemonDataMap.set(data.name, data);
+                }
+            });
+
             pokemonDataArray.forEach(pokemonData => {
-                const card = createPokemonCard(pokemonData);
-                pokedexContainer.appendChild(card);
+                // Handle error case if a fetch failed
+                if (!pokemonData) {
+                     console.warn("Skipping card creation for failed fetch.");
+
+                     return; 
+                }
+
+                const cardHTML = createPokemonCardHTML(pokemonData);
+
+                // Create a temporary div to parse the HTML string into a DOM element
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = cardHTML.trim();
+                const cardElement = tempDiv.firstChild; // Get the actual card element
+
+                // Add the click listener to the created card element
+                cardElement.addEventListener('click', () => {
+                    // Retrieve the full data object using the name stored in the map
+                    const pokemonDetails = pokemonDataMap.get(cardElement.dataset.pokemonName);
+                    openModal(pokemonDetails);
+                });
+
+                pokedexContainer.appendChild(cardElement);
             });
         }
 
-        // call the main function
         initializePokedex();
     </script>
 </body>
